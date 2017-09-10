@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.mazitekgh.gpapredictor.MainActivity">
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/graph"
+        android:layout_width="match_parent"
+        android:layout_height="300dp" />
+        <RelativeLayout
+            android:id="@+id/fillForm"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/graph">
+
+
+
+            <EditText
+                android:id="@+id/etGPA_id"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+
+                android:layout_marginLeft="11dp"
+                android:layout_marginStart="11dp"
+                android:layout_marginTop="15dp"
+                android:hint="@string/your_gpa"
+                android:ems="10"
+                android:inputType="numberDecimal" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_marginLeft="84dp"
+                android:layout_marginStart="84dp"
+                android:layout_toEndOf="@+id/etGPA_id"
+                android:text="@string/select_current_semester"
+                android:layout_toRightOf="@+id/etGPA_id" />
+
+            <Spinner
+                android:id="@+id/spSemester_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/textView2"
+                android:layout_alignStart="@+id/textView2"
+                android:layout_alignTop="@+id/etGPA_id"
+                android:layout_alignBottom="@+id/etGPA_id"
+                android:layout_alignRight="@+id/textView2"
+                android:layout_alignEnd="@+id/textView2" />
+
+            <Button
+                android:id="@+id/PredictButton_id"
+                style="@android:style/Widget.Button.Inset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignEnd="@+id/spSemester_id"
+                android:layout_alignRight="@+id/spSemester_id"
+                android:layout_below="@+id/etGPA_id"
+                android:layout_marginTop="27dp"
+                android:text="@string/predict" />
+
+            <TextView
+                android:id="@+id/tvToast"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/PredictButton_id"
+                android:textSize="30sp" />
+        </RelativeLayout>
+
+
+</RelativeLayout>

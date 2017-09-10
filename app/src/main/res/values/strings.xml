@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">GpaPredictor</string>
+    <string name="Enter_values">Enter Values</string>
+    <string name="Enter_Previous_gpa">Enter Previous GPA</string>
+    <string name="your_gpa">Your GPA</string>
+    <string name="select_current_semester">Select Current Semester</string>
+    <string name="predict">Predict</string>
+    <string name="click_on_the_graph">Click on the graph</string>
+</resources>
