@@ -6,4 +6,19 @@
     <string name="select_current_semester">Select Current Semester</string>
     <string name="predict">Predict</string>
     <string name="click_on_the_graph">Click on the graph</string>
+    <string name="please_select_semester">Please select Semester</string>
+    <string name="new_gpa">new GPA</string>
+
+    <string-array name="select_semester">
+        <item>Select a Semester</item>
+        <item>Level 100 Sem 1</item>
+        <item>Level 100 Sem 2</item>
+        <item>Level 200 Sem 1</item>
+        <item>Level 200 Sem 2</item>
+        <item>Level 300 Sem 1</item>
+        <item>Level 300 Sem 2</item>
+        <item>Level 400 Sem 1</item>
+        <item>Level 400 Sem 2</item>
+    </string-array>
+
 </resources>

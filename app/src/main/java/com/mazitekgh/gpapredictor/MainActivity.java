@@ -2,10 +2,10 @@ package com.mazitekgh.gpapredictor;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -30,19 +30,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private static final String SEM = "SEM_KEY";
     private static final String GPA = "GPA_KEY";
-    private EditText etGpa;
 
+    private static final double STEP = 0.05;
+    //colors to be used for different semester plot
+    private final int[] colors = {Color.BLACK, Color.YELLOW, Color.GREEN, Color.BLUE,
+            Color.CYAN, Color.MAGENTA, Color.DKGRAY, Color.LTGRAY, Color.BLUE, Color.YELLOW};
+    private EditText etGpa;
     private GraphView graph;
     private Button predictButton;
-    private TextView tvToast;
+    private TextView tvShowOutput;
     private int pos = 2;
     private double userGpa = 0.0;
     @NonNull
-    private PointsGraphSeries<DataPoint> pg=new PointsGraphSeries<>();
-    private final int[] colors = {Color.BLACK,Color.YELLOW,Color.GREEN,Color.BLUE,
-    Color.CYAN,Color.MAGENTA,Color.DKGRAY,Color.LTGRAY,Color.BLUE,Color.YELLOW};
-
-
+    //Stores user input
+    private PointsGraphSeries<DataPoint> pointClick = new PointsGraphSeries<>();
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -50,31 +51,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         setContentView(R.layout.activity_main);
         graph = (GraphView) findViewById(R.id.graph);
+        graph.getGridLabelRenderer().setVerticalAxisTitle(getString(R.string.your_gpa));
+        graph.getGridLabelRenderer().setHorizontalAxisTitle(getString(R.string.new_gpa));
         etGpa = (EditText) findViewById(R.id.etGPA_id);
         Spinner spSemester = (Spinner) findViewById(R.id.spSemester_id);
         predictButton = (Button) findViewById(R.id.PredictButton_id);
-        tvToast = (TextView) findViewById(R.id.tvToast);
+        tvShowOutput = (TextView) findViewById(R.id.tvToast);
         spSemester.setOnItemSelectedListener(this);
 
-        ArrayAdapter<String> semesters = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item);
-        semesters.addAll("Select a Semester", "Level 100 Sem 1", "Level 100 Sem 2",
-                "Level 200 Sem 1", "Level 200 Sem 2",
-                "Level 300 Sem 1", "Level 300 Sem 2",
-                "Level 400 Sem 1", "Level 400 Sem 2");
+        ArrayAdapter<CharSequence> semesters =
+                ArrayAdapter.createFromResource(this, R.array.select_semester,
+                        R.layout.support_simple_spinner_dropdown_item);
+
 
         spSemester.setAdapter(semesters);
-        etGpa.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (!hasFocus) {
-                    float x = Float.parseFloat(etGpa.getText().toString());
-                    if (x > 4 || x < 0) {
-                        Toast.makeText(getApplicationContext(), "GPA must be \n between 0 and 4",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
-        });
+
 
 
         predictButton.setOnClickListener(new View.OnClickListener() {
@@ -84,14 +75,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     etGpa.setError(getString(R.string.Enter_Previous_gpa));
                 } else {
                     userGpa = Float.parseFloat(etGpa.getText().toString());
-                    if (userGpa == 0 && pos == 0) {
+                    if (pos == 0) {
 
-                        Toast.makeText(getApplicationContext(), R.string.Enter_values,
+                        Toast.makeText(getApplicationContext(), R.string.please_select_semester,
                                 Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    initGraph(graph, userGpa, pos);
 
+                    } else {
+                        initGraph(graph, userGpa, pos);
+                    }
                 }
             }
         });
@@ -99,10 +90,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // initGraph(graph);
     }
 
-
+    /**
+     * used to plot the graph
+     *
+     * @param graph    the GraphView to plot the graph on
+     * @param myOldGpa the previous GPA.
+     * @param mySem    the new semester to compute its GPA
+     */
     private void initGraph(@NonNull final GraphView graph, Double myOldGpa, int mySem) {
-        double[] oldGpa = getGpaValues();
-        double[] newGpa = getNewGpaValues(myOldGpa, mySem);
+        double[] oldGpa = getGpaValues(STEP);
+        double[] newGpa = getCgpaValues(myOldGpa, mySem);
         DataPoint[] gpa = new DataPoint[oldGpa.length];
         for (int i = 0; i < oldGpa.length; i++) {
             gpa[i] = new DataPoint(oldGpa[i], newGpa[i]);
@@ -115,8 +112,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         series.setDrawDataPoints(true);
         series.setColor(colors[pos]);
         series.setTitle("Sem "+pos +" Prediction");
-
-        // enable scaling
 
 
         // set manual X bounds
@@ -142,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 + (float) dataPoint.getY()
                         , Toast.LENGTH_LONG).show();
                         */
-                tvToast.setText("CGPA = "+String.format("%.2f",dataPoint.getY()) +" if you get "
+                tvShowOutput.setText("CGPA = " + String.format("%.2f", dataPoint.getY()) + " if you get "
                         +String.format("%.2f",dataPoint.getX()) +" this "+pos +" Semester");
 
 
@@ -167,21 +162,38 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
+    /**
+     * Generate gpa values from 0 to 4 a step of {@Link step}
+     *
+     * @param step double specify increment
+     * @return the computed GPA in an array of type double
+     */
     @NonNull
-    private double[] getGpaValues() {
-        double[] result = new double[81];
+    private double[] getGpaValues(double step) {
+        int N = (int) (4 / step) + 1;
+        double[] result = new double[N];
         result[0] = 0;
-        for (int i = 1; i < 81; i++) {
-            result[i] = result[i - 1] + 0.05;
+        for (int i = 1; i < N; i++) {
+            result[i] = result[i - 1] + step;
         }
         return result;
     }
 
+    /**
+     * calculate the cumulative GPA using the current using the previous CGPA{@Link oldGPA}
+     * and the current semester {@Link sem}
+     * @param oldGPA the previous gpa
+     * @param sem the semester you want to compute it gpa
+     * @return array of CGPA values of type double
+     */
     @NonNull
-    private double[] getNewGpaValues(double oldGPA, int sem) {
-        double[] y = new double[81];
-        double[] x = getGpaValues();
-        for (int i = 0; i < 81; i++) {
+    private double[] getCgpaValues(double oldGPA, int sem) {
+
+        double[] x = getGpaValues(STEP);
+        int N = x.length;
+        double[] y = new double[N];
+
+        for (int i = 0; i < N; i++) {
             y[i] = (1 / (double) sem) * (x[i] + ((double) sem - 1) * (oldGPA));
         }
         return y;
@@ -191,6 +203,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
 
+        /*
+         Save values on configuration change
+          */
         outState.putDouble(GPA, userGpa);
         outState.putInt(SEM, pos);
 
@@ -200,6 +215,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onRestoreInstanceState(@Nullable Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
+        /*
+        Restore Values after Configuration change
+         */
         if (savedInstanceState != null) {
             userGpa = savedInstanceState.getDouble(GPA);
             pos = savedInstanceState.getInt(SEM);
@@ -209,26 +227,31 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
-    private void getUserSelectedPoint(double x,double y)
-    {
+    /**
+     * Indicate the point on the graph the user selected
+     * @param x x coordinate of the user selected point
+     * @param y y coordinate  of the user selected point
+     */
+    private void getUserSelectedPoint(double x,double y) {
 
-            DataPoint[] pnt = {new DataPoint(x,y)};
-        if(pg.isEmpty()) {
-            pg = new PointsGraphSeries<>(pnt);
-            graph.addSeries(pg);
-            pg.setSize(14);
-            pg.setColor(Color.RED);
+        DataPoint[] pnt = {new DataPoint(x, y)};
+        if (pointClick.isEmpty()) {
+            pointClick = new PointsGraphSeries<>(pnt);
+            graph.addSeries(pointClick);
+            pointClick.setSize(14);
+            pointClick.setColor(Color.RED);
 
+        } else {
+            pointClick.resetData(pnt);
         }
-        else{
-            pg.resetData(pnt);
-        }
-
-
 
 
     }
 
+    /**
+     * method to hide the keyboard
+     * @param view the current view
+     */
     private void hideKeyboard(@Nullable View view) {
         if (view != null) {
             view.clearFocus();
